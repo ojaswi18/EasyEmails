@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}home{% endblock title %}
+{% block body %}
+<div>
+    This is google calendar
+    {% if events %}
+    <ul>
+        {% for item in events %}
+        <li>
+            <ul>
+                <li>{{ item }}</li>
+                <a href="/emailbody"><button type="button" class="btn btn-primary btn-lg">Emailbody</button></a> 
+            </ul>
+        <li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No events found.</p>
+    {% endif %} 
+    <a href="/addevent"><button type="button" class="btn btn-primary btn-lg">addevent</button></a>
+</div>
+{% endblock body %}

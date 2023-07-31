@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Event{% endblock title %}
+
+{% block body %}
+<div class="container">
+  <h1>Create Event</h1>
+  <form method="POST" action="{% url 'create_event' %}">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input type="text" class="form-control" id="title" name="title" required>
+    </div>
+    <div class="form-group">
+      <label for="start">Start Time</label>
+      <input type="datetime-local" class="form-control" id="start" name="start" required>
+    </div>
+    <div class="form-group">
+      <label for="end">End Time</label>
+      <input type="datetime-local" class="form-control" id="end" name="end" required>
+    </div>
+    <div class="form-group">
+      <label for="location">Location</label>
+      <input type="text" class="form-control" id="location" name="location">
+    </div>
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea class="form-control" id="description" name="description"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="reminders">Reminders</label>
+      <input type="text" class="form-control" id="reminders" name="reminders">
+    </div>
+    <div class="form-group">
+      <label for="attendees">Attendees</label>
+      <textarea class="form-control" id="attendees" name="attendees"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Create Event</button>
+  </form>
+</div>
+{% endblock body %}

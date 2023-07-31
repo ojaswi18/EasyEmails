@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}sortedemails{% endblock title %}
+{% block body %}
+  <div class="container">
+    This is sorted emails page
+    <h1>{{ slug }}</h1>
+    {% if groupdisplayed %}
+        {% for item in groupdisplayed %}    
+            <div class="card p-3 mb-1" style="display: flex ; flex-direction: row;">
+                <button id="star-button-{{ item.id }}" class="star-button mr-4" onclick="toggleIcon('{{ item.id }}')" style="border: none; background-color: transparent;">
+                    <i id="star-icon1-{{ item.id }}" class="bi bi-star" style="display: {% if item.star %}none{% endif %};"></i>
+                    <i id="star-icon2-{{ item.id }}" class="bi bi-star-fill"  style="display: {% if not item.star %}none{% endif %}; color: yellow;"></i>
+                </button>
+                <div class="first">
+                   <a href="/emailbody?id={{ item.id }}" style="text-decoration: none; color: inherit;">
+                   <li style="list-style-type: none; font-weight: {% if not item.read %}bold{% endif %};">
+                    {{ item.sender }}
+                    <br>
+                    {{ item.subject }}
+                   </li>
+                   </a>
+                </div>
+                <div class="second" style="margin-left: auto;" >
+                    {{item.day_month}}
+                </div>
+            </div>
+        {% endfor %}
+     {% else %}
+        <p>No emails found.</p>
+    {% endif %} 
+ </div>
+    <script>
+        function toggleIcon(emailId) {
+            var starIcon1 = document.getElementById('star-icon1-' + emailId);
+            var starIcon2 = document.getElementById('star-icon2-' + emailId);
+            starIcon1.style.display = starIcon1.style.display === 'none' ? 'inline' : 'none';
+            starIcon2.style.display = starIcon2.style.display === 'none' ? 'inline' : 'none';
+        
+            var isStarred = starIcon2.style.display === 'inline';
+        
+            fetch(`/starEmail/${emailId}/`)
+            .then(response => response.json())
+            .then(data => {
+              // Alert message
+              if (isStarred) {
+                alert('Email has been unstarred.');
+              } else {
+                alert('Email has been starred.');
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        }
+     </script>
+{% endblock body %}
+    

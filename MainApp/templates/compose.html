@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Compose{% endblock title %}
+{% block body %}
+<div class="container">
+    <form method="POST" action="{% url 'sendEmail' %}" enctype="multipart/form-data" class="form-compose">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="recipient">To:</label>
+          <input type="email" id="recipient" name="recipient" class="form-control" required>
+        </div>
+      
+        <div class="form-group">
+          <label for="cc">Cc:</label>
+          <input type="email" id="cc" name="cc" class="form-control">
+        </div>
+      
+        <div class="form-group">
+          <label for="bcc">Bcc:</label>
+          <input type="email" id="bcc" name="bcc" class="form-control">
+        </div>
+      
+        <div class="form-group">
+          <label for="subject">Subject:</label>
+          <input type="text" id="subject" name="subject" class="form-control" required>
+        </div>
+      
+        <div class="form-group">
+          <label for="content">Content:</label>
+          <textarea id="content" name="content" class="form-control" required></textarea>
+        </div>
+      
+        <div class="form-group">
+          <label for="attachment">Attachment:</label>
+          <input type="file" id="attachment" name="attachment" class="form-control-file">
+        </div>
+      
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form> 
+</div>
+<script>
+    // Handle the form submission
+    document.querySelector('.form-compose').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Submit the form asynchronously
+        var form = event.target;
+        var formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                // Email sent successfully
+                alert(data.message);
+                window.history.back();  // Redirect back to the previous page
+            } else {
+                // Error sending email
+                alert(data.message);
+            }
+        })
+        .catch(function(error) {
+            // Error occurred while making the request
+            console.error('Error:', error);
+        });
+    });
+</script>
+
+{% endblock body %}
