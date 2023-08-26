@@ -68,6 +68,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 
+                # 'MainApp.context_processors.server_start_timestamp',
+                
                 # 'social_django.context_processors.backends',
                 # 'social_django.context_processors.login_redirect',
             ],
@@ -148,4 +150,13 @@ GOOGLE_OAUTH2_SCOPES = [
     'https://www.googleapis.com/auth/gmail.readonly',
     'https://www.googleapis.com/auth/gmail.modify',
     # Add more scopes as needed
+]
+
+import os
+
+STATIC_URL = '/static/'
+
+# if you're not in DEBUG mode, you might also need:
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
 ]

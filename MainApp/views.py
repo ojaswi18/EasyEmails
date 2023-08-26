@@ -1,4 +1,4 @@
-from django.shortcuts import render , redirect 
+from django.shortcuts import render , redirect ,HttpResponse
 from google_auth_oauthlib.flow import Flow
 # from social_django.utils import load_strategy
 from googleapiclient.discovery import build
@@ -15,10 +15,14 @@ from email.mime.base import MIMEBase
 from email import encoders
 import datetime
 import pytz
+from django.contrib import messages
 
 scopes = ["https://mail.google.com/", "https://www.googleapis.com/auth/calendar.events"]
 
 # Create your views here.
+
+# This will store the server start time.
+
 
 def home(request):
     flow = Flow.from_client_secrets_file(
@@ -59,30 +63,29 @@ def google_callback(request):
                      code=authorization_code)
     credentials = flow.credentials
     
-    #refresh token
     refresh_token = credentials.refresh_token
    
-    # globalcred=credentials
-    # print(globalcred)
     # Use the obtained credentials to make API calls
     service = build('gmail', 'v1', credentials=credentials)
     # Call the Gmail API to retrieve the user's emails
-    results = service.users().messages().list(userId='me', maxResults=200).execute()
+    results = service.users().messages().list(userId='me', maxResults=20).execute()
     emails = results.get('messages', [])
+    first_email_detail = service.users().messages().get(userId='me', id=results['messages'][0]['id'], format='full').execute()
+    headers = first_email_detail['payload']['headers']
+    for header in headers:
+        if header['name'] == 'Date':
+         print(header['value'])
+         break
     
     #google calendar api 
     service_calendar = build('calendar', 'v3', credentials=credentials)
     events_result = service_calendar.events().list(calendarId='primary', maxResults=10).execute()
     events = events_result.get('items', [])
     print("google calendar api done succ")
-
-    while 'nextPageToken' in results:
-       page_token = results['nextPageToken']
-       results = service.users().messages().list(userId='me', maxResults=100,pageToken=page_token, fields='messages(id, threadId)', q='is:inbox').execute()
-       emails.extend(results.get('messages', []))
     
-    for email in emails:
+    for email in emails:   
       message = service.users().messages().get(userId='me', id=email['id'], format='full', fields='id, threadId, payload,snippet,labelIds').execute()
+    
      
       label_ids = message['labelIds']
       email['star'] = 'STARRED' in label_ids
@@ -97,8 +100,6 @@ def google_callback(request):
                 data = part['body']['data']
                 body = base64.urlsafe_b64decode(data).decode('utf-8')
                 email['body'] = body
-            # Additional handling for HTML content
-            # You can perform HTML parsing or rendering here
                 break
                elif part['mimeType'] == 'text/plain':
                 data = part['body']['data']
@@ -106,12 +107,10 @@ def google_callback(request):
                 email['body'] = body
                 break
       elif 'body' in payload:
-          print("body")
           data = payload['body']['data']
           body = base64.urlsafe_b64decode(data).decode('utf-8')
           email['body'] = body      
       elif "textPlain" in payload:  
-          print("textPlain")
           data = payload['textPlain']['data']
           body = base64.urlsafe_b64decode(data).decode('utf-8')
           email['body'] = body
@@ -123,14 +122,19 @@ def google_callback(request):
       
       for header in headers:
         if header['name'] == 'From':
-            sender_name = header['value']
-            match = re.match(r'^[^<]*', sender_name)
+            sender_info = header['value']
+            match = re.match(r'^[^<]*', sender_info)
             if match:
                 email['sender'] = match.group().strip()
+                print(email['sender'])
             else:
-                email['sender'] = sender_name
-            break
-      
+                email['sender'] = sender_info
+                print(email['sender'])
+            email_match = re.search(r'<(.+?)>', sender_info)
+            if email_match:
+                email['sender_email'] = email_match.group(1)
+                print(email['sender_email'])           
+       
       for header in headers:
         if header['name'] == 'Date':
            if header['name'] == 'Date':
@@ -150,15 +154,17 @@ def google_callback(request):
           if header['name'] == 'Subject':
              email['subject'] = header['value']
              break  
-       
+          
     request.session['emails'] = emails
     request.session['events'] = events
     request.session['credentials'] = credentials.to_json()
     request.session['refresh_token'] = refresh_token
+    request.session['data_refreshed'] = True
 
     
     context = {
-        "emails":emails
+        "emails":emails,
+        "data_refreshed": True
     }
    
     return render(request, "gmail.html",context)
@@ -275,26 +281,27 @@ def sendEmail(request):
             return JsonResponse({'success': False, 'message': 'Error sending email: ' + str(e)})
 
 
-from django.contrib import messages
-
-
-def forward(request, email_id,raddress):
+def forward(request, email_id):
+    print("inside forward function")
     emails = request.session.get('emails', [])
-   
+    if request.method == "POST":
+           data = json.loads(request.body)
+           email_id = data.get('emailId')
+           recipient = data.get('recipientEmail')
+           print(recipient)  
     attachment = None 
     email_to_forward = None
+    response_data = {}  # This dictionary will hold the response data
 
     for email in emails:
-        print("inside for")
         if email['id'] == email_id:
             email_to_forward = email
             break
 
-    if email_to_forward is not None:
-        recipient = raddress 
+    if email_to_forward is not None: 
         subject = 'Fwd: ' + email_to_forward['subject']
         content = email_to_forward['body']
-        attachment = None  # Attachments are not handled in this example
+        print(content)
 
         refresh_token = request.session.get('refresh_token')
         credentials_data = request.session.get('credentials')
@@ -303,7 +310,6 @@ def forward(request, email_id,raddress):
             credentials_dict['refresh_token'] = refresh_token
 
         credentials = Credentials.from_authorized_user_info(credentials_dict)
-        print("after creds reached succ")
 
         try:
             service = build('gmail', 'v1', credentials=credentials)
@@ -319,29 +325,78 @@ def forward(request, email_id,raddress):
             raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
 
             # Send the email
-            print("inside send email")
             service.users().messages().send(userId='me', body={'raw': raw_message}).execute()
-            messages.success(request, 'Email forwarded successfully.')
-            print("sent succ")
-            # return render(request,'home.html')
+            response_data['status'] = 'success'
+            response_data['message'] = 'Email forwarded successfully.'
 
         except Exception as e:
-            messages.error(request, f'Error forwarding email: {str(e)}')
-            # return render(request,'home.html')
+            response_data['status'] = 'error'
+            response_data['message'] = f'Error forwarding email: {str(e)}'
 
     else:
-        # Handle the case where the email was not found...
-        messages.error(request, 'The specified email was not found.')
-        # return render(request,'home.html')
-    
-    service = build('gmail', 'v1', credentials=credentials)
-    message = service.users().messages().get(userId='me', id=email_id).execute()
+        response_data['status'] = 'error'
+        response_data['message'] = 'The specified email was not found.'
 
-    return render(request,"home.html")
+    return JsonResponse(response_data)
 
-def reply(request,email_id):
+
+
+def reply(request, email_id):
     print("inside reply")
-    return render(request,"home.html")
+    emails = request.session.get('emails', [])
+    
+    email_to_reply = None
+    for email in emails:
+        if email['id'] == email_id:
+            email_to_reply = email
+            break
+
+    if email_to_reply is not None:
+        recipient = email_to_reply['sender_email'] 
+        print(recipient)
+        subject = 'Re: ' + email_to_reply['subject']
+        if request.method == "POST":
+           data = json.loads(request.body)
+           email_id = data.get('emailId')
+           reply_text = data.get('replyText')
+        content = reply_text  
+    
+        refresh_token = request.session.get('refresh_token')
+        credentials_data = request.session.get('credentials')
+        credentials_dict = json.loads(credentials_data)
+        if 'refresh_token' not in credentials_dict:
+            credentials_dict['refresh_token'] = refresh_token
+
+        credentials = Credentials.from_authorized_user_info(credentials_dict)
+        print("after cred and before try")
+        try:
+            service = build('gmail', 'v1', credentials=credentials)
+            message = MIMEMultipart()
+            message['To'] = recipient
+            message['Subject'] = subject
+            thread_id = email_to_reply.get('threadId')
+            print(thread_id)
+        
+            body = MIMEText(content, 'plain')
+            message.attach(body)
+            
+            raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
+            # service.users().messages().send(userId='me', body={'raw': raw_message}).execute()
+            if thread_id:
+                service.users().messages().send(userId='me', body={'raw': raw_message, 'threadId': thread_id}).execute()
+            else:
+                service.users().messages().send(userId='me', body={'raw': raw_message}).execute()
+            messages.success(request, 'Email replied successfully.')
+            return JsonResponse({'status': 'success', 'message': 'Email replied successfully.'})
+
+        except Exception as e:
+            messages.error(request, f'Error replying to email: {str(e)}')
+            return JsonResponse({'status': 'error', 'message': f'Error replying to email: {str(e)}'})
+
+    else:
+        messages.error(request, 'The specified email was not found.')
+        return JsonResponse({'status': 'error', 'message': 'The specified email was not found.'})
+
 
 def create_event(request):
     refresh_token = request.session.get('refresh_token')
@@ -410,6 +465,21 @@ def emailbody(request):
             break
         
     return render(request, 'emailbody.html', {'email': matching_email})
+
+def get_processed_emails(request):
+    emails = request.session.get('emails', [])
+    data_refreshed = request.session.get('data_refreshed', False)
+    
+    # Remove it from the session after you've accessed it
+    if data_refreshed:
+        del request.session['data_refreshed']
+
+    response_data = {
+        "emails": emails,
+        "data_refreshed": data_refreshed
+    }
+    
+    return JsonResponse(response_data)
 
 
 def starEmail(request,email_id):

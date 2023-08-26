@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}emailbody{% endblock title %}
 {% block body %}
 <div class="container-lg p-4" style="background-color:#f2f1f1">
@@ -15,10 +16,18 @@
       <div class="first" style="font-size: 23px;">{{email.sender}}</div>
       <div class="second" style="margin-left: auto;">
         {{email.day_month}}
-        <button id="star-button-{{ email.id }}" class="star-button ml-2 mr-2" onclick="toggleIcon('{{ email.id }}')" style="border: none; background-color: transparent;">
+        {% comment %} <button id="star-button-{{ email.id }}" class="star-button ml-2 mr-2" onclick="toggleIcon('{{ email.id }}')" style="border: none; background-color: transparent;">
           <i id="star-icon1-{{ email.id }}" class="bi bi-star" style="display: {% if email.star %}none{% endif %};"></i>
           <i id="star-icon2-{{ email.id }}" class="bi bi-star-fill"  style="display: {% if not email.star %}none{% endif %}; color: yellow;"></i>
-       </button>  
+       </button>   {% endcomment %}
+       <button id="star-button-{{ email.id }}" class="star-button ml-2 mr-2" onclick="toggleIcon('{{ email.id }}')" style="border: none; background-color: transparent;">
+        <!-- Empty star icon; displayed when email is NOT starred -->
+        <i id="star-icon1-{{ email.id }}" class="bi bi-star" style="display: {% if email.star %}none{% else %}inline{% endif %};"></i>
+        
+        <!-- Filled star icon; displayed when email IS starred -->
+        <i id="star-icon2-{{ email.id }}" class="bi bi-star-fill"  style="display: {% if email.star %}inline{% else %}none{% endif %}; color: yellow;"></i>
+    </button>
+    
        <button class="reply-button mr-2" style="border: none; background-color: transparent;">
         <i class="bi bi-reply"></i>
        </button>
@@ -27,8 +36,7 @@
           <i class="bi bi-three-dots"></i>
         </button>
         <div class="dropdown-menu" aria-labelledby="moreOptionsDropdown">
-          {% comment %} <a class="dropdown-item" href="#">Reply</a> {% endcomment %}
-          <a class="dropdown-item" href="#" onclick="replyToEmail('{{ email.id }}')">Reply</a>
+          <a class="dropdown-item" onclick="replyToEmail('{{ email.id }}')">Reply</a>
           <a class="dropdown-item" onclick="forwardEmail('{{ email.id }}')">Forward</a>
           <a class="dropdown-item" href="#">Delete</a>
           <a class="dropdown-item" href="#">Mark as Unread</a>
@@ -41,64 +49,7 @@
       {{ email.body|safe }}
     </div> </div> 
   </div>
-  {% comment %} <div id="forwardModal" class="modal" style="display: none;">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Forward Email</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <p>Please enter recipient's email address:</p>
-          <input type="text" id="recipientEmail" class="form-control" placeholder="Enter recipient's email">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="forwardEmail('{{ email.id }}')">Submit</button>
-        </div>
-        <div class="modal" tabindex="-1" id="replyModal">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">Reply to Email</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <textarea id="replyText" class="form-control" placeholder="Enter your reply..."></textarea>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="sendReply">Send Reply</button>
-              </div>
-            </div>
-          </div>
-        </div> {% endcomment %}
-            <!-- Forward Email Modal Here... -->
-    <div id="forwardModal" class="modal" style="display: none;">
-      <!-- Modal content here... -->
-    </div>
 
-    <!-- Reply Modal Here -->
-    {% comment %} <div class="modal" tabindex="-1" id="replyModal">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Reply to Email</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <textarea id="replyText" class="form-control" placeholder="Enter your reply..."></textarea>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="sendReply">Send Reply</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>  {% endcomment %}
   <div class="modal" tabindex="-1" id="replyModal">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -122,8 +73,116 @@
     </div>
   </div>
 </div>
-<script>
-  function toggleIcon(emailId) {
+
+
+<script src="{% static 'myapp/starfunction.js' %}"></script>
+
+  <script>
+function deleteEmail(emailId) {
+  fetch(`/deleteEmail/${emailId}/`, {
+    method: 'DELETE',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}' 
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      const emailElement = document.getElementById('email-' + emailId); 
+      console.log('email-' + emailId)
+      console.log(emailElement)
+      if (emailElement) {
+        console.log("to remove element")
+        emailElement.remove(); 
+      }   
+      alert('Email deleted successfully.');
+    } else {
+      alert('Error deleting email.');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+}
+
+function getCookie(name) {
+  let value = "; " + document.cookie;
+  let parts = value.split("; " + name + "=");
+  if (parts.length == 2) return parts.pop().split(";").shift();
+  
+}
+
+function forwardEmail(emailId) {
+  console.log("forward email called");
+  var recipientEmail = prompt("Please enter recipient's email address:"); 
+  if (!recipientEmail) {
+      console.log("No email entered, exiting function.");
+      return; 
+  }
+  console.log(recipientEmail);
+  console.log("Proceed with forwarding email to:", recipientEmail);
+  fetch(`/forward/${emailId}/`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: JSON.stringify({
+        emailId: emailId,
+        recipientEmail: recipientEmail
+    })
+})
+.then(response => response.json())
+.then(data => {
+    if (data.status === "success") {
+        alert("Email forwarded successfully.");
+    } else {
+        alert("Failed to forward the email: " + data.message);
+    }
+})
+.catch(error => {
+    console.error("Error during the AJAX request:", error);
+});
+}
+
+var replyModal = new bootstrap.Modal(document.getElementById('replyModal'));
+function replyToEmail(emailId) {
+    document.getElementById('sendReply').onclick = async function() { 
+        var replyTextValue = document.getElementById('replyText').value;
+        try {
+            console.log("inside try");
+            
+            const response = await fetch(`/reply/${emailId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    replyText: replyTextValue
+                })
+            });
+            const responseData = await response.json();
+            if (responseData.status === "success") {
+                replyModal.hide();
+                setTimeout(() => {
+                  alert(responseData.message);
+              }, 400); 
+            } else {
+                console.error("Failed to send the reply:", responseData.message);
+            }
+        } catch (error) {
+            console.log("Error:", error);
+        }
+    };
+    replyModal.show();
+}
+
+</script>
+{% endblock body %}
+
+
+  
+  {% comment %} function toggleIcon(emailId) {
     var starIcon1 = document.getElementById('star-icon1-' + emailId);
     var starIcon2 = document.getElementById('star-icon2-' + emailId);
     starIcon1.style.display = starIcon1.style.display === 'none' ? 'inline' : 'none';
@@ -132,87 +191,18 @@
     var isStarred = starIcon2.style.display === 'inline';
 
     fetch(`/starEmail/${emailId}/`)
-    .then(response => response.json())
-       
+    .then(response => response.json())    
     .then(data => {
-      // Alert message
       if (isStarred) {
-        alert('Email has been unstarred.');
-      } else {
         alert('Email has been starred.');
+      } else {
+        alert('Email has been unstarred.');
       }
     })
     .catch(error => {
       console.error('Error:', error);
     });
-}
-function deleteEmail(emailId) {
-  fetch(`/deleteEmail/${emailId}/`, {
-    method: 'DELETE',
-    headers: {
-      'X-CSRFToken': '{{ csrf_token }}' // Add the CSRF token for security
-    }
-  })
-  .then(response => {
-    if (response.ok) {
-      // Email successfully deleted
-      const emailElement = document.getElementById('email-' + emailId); 
-      console.log('email-' + emailId)
-      console.log(emailElement)
-      if (emailElement) {
-        console.log("to remove element")
-        emailElement.remove(); // Remove the email element from the DOM
-      }
-      
-      alert('Email deleted successfully.');
-      
-      // Redirect to another page or perform any other necessary action
-      // window.location.href = '/emails'; // Replace with your desired URL
-    } else {
-      // Error occurred while deleting the email
-      
-      alert('Error deleting email.');
-    }
-  })
-  .catch(error => {
-    // Error occurred while making the request
-    console.error('Error:', error);
-  });
-}
-
-  // Forward the email using the recipient's email address
-  function forwardEmail(emailId) {
-    var recipientEmail = prompt("Please enter recipient's email address:");
-    if (recipientEmail != null) {
-      // This assumes recipientEmail does not contain any characters that are illegal in a URL.
-      window.location.href = '/forward/' + emailId + '/' + recipientEmail + '/';
-    }
-}
-
-{% comment %} function replyToEmail(emailId) {
-  var replyText = prompt("Please enter your reply:");
-
-  if (replyText != null && replyText != "") {
-      // This assumes replyText does not contain any characters that are illegal in a URL.
-      window.location.href = '/reply/' + emailId + '/' + encodeURIComponent(replyText) + '/';
-  }
 } {% endcomment %}
-
-function replyToEmail(emailId) {
-  document.getElementById('sendReply').onclick = function() {
-    var replyText = document.getElementById('replyText').value;
-    if (replyText != "") {
-      // This assumes replyText does not contain any characters that are illegal in a URL.
-      window.location.href = '/reply/' + emailId + '/' + encodeURIComponent(replyText) + '/';
-    }
-  };
-  var modal = new bootstrap.Modal(document.getElementById('replyModal'));
-  modal.show();
-}
-
-
-</script>
-{% endblock body %}
 
 
 

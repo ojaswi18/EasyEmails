@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}sortedemails{% endblock title %}
 {% block body %}
   <div class="container">
@@ -10,7 +11,8 @@
                 <button id="star-button-{{ item.id }}" class="star-button mr-4" onclick="toggleIcon('{{ item.id }}')" style="border: none; background-color: transparent;">
                     <i id="star-icon1-{{ item.id }}" class="bi bi-star" style="display: {% if item.star %}none{% endif %};"></i>
                     <i id="star-icon2-{{ item.id }}" class="bi bi-star-fill"  style="display: {% if not item.star %}none{% endif %}; color: yellow;"></i>
-                </button>
+                </button> 
+                
                 <div class="first">
                    <a href="/emailbody?id={{ item.id }}" style="text-decoration: none; color: inherit;">
                    <li style="list-style-type: none; font-weight: {% if not item.read %}bold{% endif %};">
@@ -29,29 +31,36 @@
         <p>No emails found.</p>
     {% endif %} 
  </div>
-    <script>
-        function toggleIcon(emailId) {
-            var starIcon1 = document.getElementById('star-icon1-' + emailId);
-            var starIcon2 = document.getElementById('star-icon2-' + emailId);
-            starIcon1.style.display = starIcon1.style.display === 'none' ? 'inline' : 'none';
-            starIcon2.style.display = starIcon2.style.display === 'none' ? 'inline' : 'none';
-        
-            var isStarred = starIcon2.style.display === 'inline';
-        
-            fetch(`/starEmail/${emailId}/`)
-            .then(response => response.json())
-            .then(data => {
-              // Alert message
-              if (isStarred) {
-                alert('Email has been unstarred.');
-              } else {
-                alert('Email has been starred.');
-              }
-            })
-            .catch(error => {
-              console.error('Error:', error);
-            });
-        }
-     </script>
+
+ <script src="{% static 'myapp/starfunction.js' %}"></script>
+
+
 {% endblock body %}
+
+
+
+{% comment %} <script>
+  function toggleIcon(emailId) {
+      var starIcon1 = document.getElementById('star-icon1-' + emailId);
+      var starIcon2 = document.getElementById('star-icon2-' + emailId);
+      starIcon1.style.display = starIcon1.style.display === 'none' ? 'inline' : 'none';
+      starIcon2.style.display = starIcon2.style.display === 'none' ? 'inline' : 'none';
+  
+      var isStarred = starIcon2.style.display === 'inline';
+  
+      fetch(`/starEmail/${emailId}/`)
+      .then(response => response.json())
+      .then(data => {
+        // Alert message
+        if (isStarred) {
+          alert('Email has been starred.');
+        } else {
+          alert('Email has been unstarred.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+</script> {% endcomment %}
     
