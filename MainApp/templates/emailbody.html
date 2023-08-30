@@ -16,14 +16,9 @@
       <div class="first" style="font-size: 23px;">{{email.sender}}</div>
       <div class="second" style="margin-left: auto;">
         {{email.day_month}}
-        {% comment %} <button id="star-button-{{ email.id }}" class="star-button ml-2 mr-2" onclick="toggleIcon('{{ email.id }}')" style="border: none; background-color: transparent;">
-          <i id="star-icon1-{{ email.id }}" class="bi bi-star" style="display: {% if email.star %}none{% endif %};"></i>
-          <i id="star-icon2-{{ email.id }}" class="bi bi-star-fill"  style="display: {% if not email.star %}none{% endif %}; color: yellow;"></i>
-       </button>   {% endcomment %}
        <button id="star-button-{{ email.id }}" class="star-button ml-2 mr-2" onclick="toggleIcon('{{ email.id }}')" style="border: none; background-color: transparent;">
         <!-- Empty star icon; displayed when email is NOT starred -->
         <i id="star-icon1-{{ email.id }}" class="bi bi-star" style="display: {% if email.star %}none{% else %}inline{% endif %};"></i>
-        
         <!-- Filled star icon; displayed when email IS starred -->
         <i id="star-icon2-{{ email.id }}" class="bi bi-star-fill"  style="display: {% if email.star %}inline{% else %}none{% endif %}; color: yellow;"></i>
     </button>
@@ -38,9 +33,9 @@
         <div class="dropdown-menu" aria-labelledby="moreOptionsDropdown">
           <a class="dropdown-item" onclick="replyToEmail('{{ email.id }}')">Reply</a>
           <a class="dropdown-item" onclick="forwardEmail('{{ email.id }}')">Forward</a>
-          <a class="dropdown-item" href="#">Delete</a>
-          <a class="dropdown-item" href="#">Mark as Unread</a>
-          <a class="dropdown-item" href="#">Block</a>
+          <a class="dropdown-item" onclick="deleteEmail('{{ email.id }}')">Delete</a>
+          {% comment %} <a class="dropdown-item" href="#">Mark as Unread</a> {% endcomment %}
+          <a class="dropdown-item" onclick="blockSender('{{ email.sender_email }}')">Block</a>
         </div>
       </span>
       </div>
@@ -78,31 +73,6 @@
 <script src="{% static 'myapp/starfunction.js' %}"></script>
 
   <script>
-function deleteEmail(emailId) {
-  fetch(`/deleteEmail/${emailId}/`, {
-    method: 'DELETE',
-    headers: {
-      'X-CSRFToken': '{{ csrf_token }}' 
-    }
-  })
-  .then(response => {
-    if (response.ok) {
-      const emailElement = document.getElementById('email-' + emailId); 
-      console.log('email-' + emailId)
-      console.log(emailElement)
-      if (emailElement) {
-        console.log("to remove element")
-        emailElement.remove(); 
-      }   
-      alert('Email deleted successfully.');
-    } else {
-      alert('Error deleting email.');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-  });
-}
 
 function getCookie(name) {
   let value = "; " + document.cookie;
@@ -110,6 +80,74 @@ function getCookie(name) {
   if (parts.length == 2) return parts.pop().split(";").shift();
   
 }
+
+function blockSender(sender_email) {
+  console.log("inside block sender");
+  console.log(sender_email);
+  fetch(`/blocksender/`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: JSON.stringify({
+        sender_email: sender_email,
+    })
+})
+.then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert(data.message);
+        } else if (data.error) {
+            alert(data.error);
+        }
+    })
+    .catch(error => {
+        console.error("Error blocking sender:", error);
+        alert("An error occurred while trying to block the sender. Please try again later.");
+    });
+}
+
+function deleteEmail(emailId) {
+  console.log("inside delete email emailbody");
+  fetch(`/deleteEmail/${emailId}/`, {
+      method: 'DELETE',
+      headers: {
+          //'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          'X-CSRFToken': getCookie('csrftoken'),
+      }
+  })
+  .then(response => {
+      if (response.ok) {
+          // Store deleted email ID in local storage
+          let deletedEmails = localStorage.getItem('deletedEmails') || "[]";
+          deletedEmails = JSON.parse(deletedEmails);
+          deletedEmails.push(emailId);
+          localStorage.setItem('deletedEmails', JSON.stringify(deletedEmails));
+
+          // Redirect to sortedemails with a flag for the alert
+          console.log("before going back to sorted email page");
+          localStorage.setItem('emailDeleted', 'true');
+          let previousPage = document.referrer;
+          if (previousPage) {
+              window.location.href = previousPage;
+          } else {
+              // Fallback in case referrer is not available
+              window.location.href = "/default-path-if-needed";
+          }
+      } else {
+          alert('Error deleting email.');
+      }
+  })
+  .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+  });
+}
+
+
+
+
 
 function forwardEmail(emailId) {
   console.log("forward email called");
@@ -180,29 +218,6 @@ function replyToEmail(emailId) {
 </script>
 {% endblock body %}
 
-
-  
-  {% comment %} function toggleIcon(emailId) {
-    var starIcon1 = document.getElementById('star-icon1-' + emailId);
-    var starIcon2 = document.getElementById('star-icon2-' + emailId);
-    starIcon1.style.display = starIcon1.style.display === 'none' ? 'inline' : 'none';
-    starIcon2.style.display = starIcon2.style.display === 'none' ? 'inline' : 'none';
-
-    var isStarred = starIcon2.style.display === 'inline';
-
-    fetch(`/starEmail/${emailId}/`)
-    .then(response => response.json())    
-    .then(data => {
-      if (isStarred) {
-        alert('Email has been starred.');
-      } else {
-        alert('Email has been unstarred.');
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-    });
-} {% endcomment %}
 
 
 

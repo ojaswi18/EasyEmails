@@ -33,7 +33,7 @@ urlpatterns = [
     path('deleteEmail/<str:email_id>/', views.delete_email, name='delete_email'),
     path('forward/<str:email_id>/', views.forward, name='forward'),
     path('reply/<str:email_id>/', views.reply, name='reply'),
-    # path('server_start_time/', views.server_start_time, name='server_start_time'),
     path('getProcessedEmails/', views.get_processed_emails, name='get_processed_emails'),
-
+    path('markasread/', views.markEmailAsRead, name='markasread'),
+    path('blocksender/', views.block_sender, name='block_sender'),
 ]

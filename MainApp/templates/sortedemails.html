@@ -7,14 +7,16 @@
     <h1>{{ slug }}</h1>
     {% if groupdisplayed %}
         {% for item in groupdisplayed %}    
-            <div class="card p-3 mb-1" style="display: flex ; flex-direction: row;">
+            <div class="card p-3 mb-1" style="display: flex ; flex-direction: row;" id="email-{{ item.id }}">
                 <button id="star-button-{{ item.id }}" class="star-button mr-4" onclick="toggleIcon('{{ item.id }}')" style="border: none; background-color: transparent;">
                     <i id="star-icon1-{{ item.id }}" class="bi bi-star" style="display: {% if item.star %}none{% endif %};"></i>
                     <i id="star-icon2-{{ item.id }}" class="bi bi-star-fill"  style="display: {% if not item.star %}none{% endif %}; color: yellow;"></i>
                 </button> 
                 
                 <div class="first">
-                   <a href="/emailbody?id={{ item.id }}" style="text-decoration: none; color: inherit;">
+                    {% comment %} <a href="/markasread?id={{ item.id }}" style="text-decoration: none; color: inherit;"> {% endcomment %}
+                    <a onclick="markAsReadAndDisplayBody(event, this, '{{ item.id }}')" style="text-decoration: none; color: inherit;">
+
                    <li style="list-style-type: none; font-weight: {% if not item.read %}bold{% endif %};">
                     {{ item.sender }}
                     <br>
@@ -32,35 +34,80 @@
     {% endif %} 
  </div>
 
+
  <script src="{% static 'myapp/starfunction.js' %}"></script>
+ 
+ <script>
 
-
-{% endblock body %}
-
-
-
-{% comment %} <script>
-  function toggleIcon(emailId) {
-      var starIcon1 = document.getElementById('star-icon1-' + emailId);
-      var starIcon2 = document.getElementById('star-icon2-' + emailId);
-      starIcon1.style.display = starIcon1.style.display === 'none' ? 'inline' : 'none';
-      starIcon2.style.display = starIcon2.style.display === 'none' ? 'inline' : 'none';
-  
-      var isStarred = starIcon2.style.display === 'inline';
-  
-      fetch(`/starEmail/${emailId}/`)
-      .then(response => response.json())
-      .then(data => {
-        // Alert message
-        if (isStarred) {
-          alert('Email has been starred.');
-        } else {
-          alert('Email has been unstarred.');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("inside dom for delete sorted emails");
+    
+    // Display the alert if the flag is set
+    if (localStorage.getItem('emailDeleted') === 'true') {
+      alert('Email deleted successfully.');
+      // Remove the flag from localStorage so the alert won't show up again on subsequent page loads
+      localStorage.removeItem('emailDeleted');
   }
-</script> {% endcomment %}
+
+    // Get the deleted email IDs from local storage
+    let deletedEmails = localStorage.getItem('deletedEmails') || "[]";
+    deletedEmails = JSON.parse(deletedEmails);
+
+    // Loop through each deleted email ID and hide/remove it from the DOM
+    deletedEmails.forEach(emailId => {
+        const emailElement = document.getElementById('email-' + emailId);
+        if (emailElement) {
+            emailElement.style.display = 'none'; // or emailElement.remove(); to completely remove from DOM
+        }
+    });
+
+    const emailIds = Array.from(document.querySelectorAll('[id^="email-"]')).map(el => el.id.split('email-')[1]);
+    emailIds.forEach(id => {
+        updateEmailStyle(id);
+    });
+});
+
+function updateEmailStyle(emailId) {
+    const emailElement = document.getElementById('email-' + emailId);
+    if (emailElement && localStorage.getItem('readEmail-' + emailId)) {
+        emailElement.querySelector('li').style.fontWeight = 'normal';
+    }
+}
+
+function markAsReadAndDisplayBody(event, element, emailId) {
+    event.preventDefault();
+    const url = `/markasread?id=${emailId}`;
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            console.log("succ");
+            localStorage.setItem('readEmail-' + emailId, true);
+
+            // Apply style changes
+            updateEmailStyle(emailId);
+            window.location.href = `/emailbody?id=${emailId}`;
+        } else {
+            console.error('Error marking email as read:', data.message);
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+    });
+}
+
+
+
+</script>
+{% endblock body %} 
+
+
     

@@ -16,8 +16,10 @@ from email import encoders
 import datetime
 import pytz
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
 
 scopes = ["https://mail.google.com/", "https://www.googleapis.com/auth/calendar.events"]
+
 
 # Create your views here.
 
@@ -455,7 +457,10 @@ def create_event(request):
 
 
 def emailbody(request):
+    print("inside emailbody function")
+    
     emailbody_id = request.GET.get('id')
+    
     emails = request.session.get('emails', [])
     
     matching_email = None
@@ -535,8 +540,62 @@ def starEmail(request,email_id):
         
     return JsonResponse({'message': message})
 
+
+def markEmailAsRead(request):
+    print("inside markasread")
+    email_id = request.GET.get('id')
+    print(email_id)
+    refresh_token = request.session.get('refresh_token')
+    credentials_data = request.session.get('credentials')
+    credentials_dict = json.loads(credentials_data)
+
+    if 'refresh_token' not in credentials_dict:
+        credentials_dict['refresh_token'] = refresh_token
+
+    creds = Credentials.from_authorized_user_info(credentials_dict)
+    service = build('gmail', 'v1', credentials=creds)
+
+    # Get the original labels of the email
+    message = service.users().messages().get(
+        userId='me',
+        id=email_id,
+        format='full',
+        fields='labelIds'
+    ).execute()
+
+    original_labels = message['labelIds']
+
+    isRead = False
+
+    # If the email does not have the 'UNREAD' label, it's already read
+    if 'UNREAD' in original_labels:
+        # Modify the email to remove the 'UNREAD' label
+        modified_message = service.users().messages().modify(
+            userId='me',
+            id=email_id,
+            body={'removeLabelIds': ['UNREAD']}
+        ).execute()
+        isRead = True
+    else:
+        # Modify the email to add the 'UNREAD' label
+        modified_message = service.users().messages().modify(
+            userId='me',
+            id=email_id,
+            body={'addLabelIds': ['UNREAD']}
+        ).execute()
+        
+    if isRead:
+        messages.success(request, 'Email marked as read.')
+        return JsonResponse({'status': 'success', 'message': 'Email marked as read.'})
+    else:
+        messages.error(request, 'Failed to mark email as read.')
+        return JsonResponse({'status': 'error', 'message': 'Failed to mark email as read.'})
+
+
+
 def delete_email(request, email_id):
-    print("entered in delete")
+    print("inside delete email def in vews")
+    print(email_id)
     refresh_token = request.session.get('refresh_token')
     print(refresh_token)
     credentials_data = request.session.get('credentials')
@@ -557,6 +616,98 @@ def delete_email(request, email_id):
     except HttpError as e:
         error_message = f"An error occurred: {e}"
         return JsonResponse({'message': error_message}, status=500)
+    
+
+
+@csrf_exempt
+def block_sender(request):
+
+    # Check for POST method.
+    if request.method != "POST":
+        return JsonResponse({"error": "POST method required."}, status=400)
+
+    # Parse the POST request's body to get sender_email.
+    body_unicode = request.body.decode('utf-8')
+    body_data = json.loads(body_unicode)
+    sender_email = body_data.get('sender_email')
+    
+    if not sender_email:
+        return JsonResponse({"error": "Sender email is required"}, status=400)
+
+    # Get credentials from session.
+    refresh_token = request.session.get('refresh_token')
+    credentials_data = request.session.get('credentials')
+    
+    if not credentials_data:
+        return JsonResponse({"error": "User is not authenticated with Gmail."}, status=401)
+
+    credentials_dict = json.loads(credentials_data)
+    if 'refresh_token' not in credentials_dict:
+        credentials_dict['refresh_token'] = refresh_token
+
+    creds = Credentials.from_authorized_user_info(credentials_dict)
+    service = build('gmail', 'v1', credentials=creds)
+
+    # Retrieve or create "Blocked Emails" label ID
+    try:
+        results = service.users().labels().list(userId='me').execute()
+        labels = results.get('labels', [])
+        blocked_emails_label_id = None
+
+        for label in labels:
+            if label['name'] == 'Blocked Emails':
+                blocked_emails_label_id = label['id']
+                break
+
+        if not blocked_emails_label_id:
+            # If label doesn't exist, create it.
+            label_body = {
+                'name': 'Blocked Emails',
+                'labelListVisibility': 'labelShow',
+                'messageListVisibility': 'show'
+            }
+            created_label = service.users().labels().create(userId='me', body=label_body).execute()
+            blocked_emails_label_id = created_label['id']
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+    # Create a filter to move future emails from the blocked sender to "Blocked Emails".
+    filter_body = {
+        "criteria": {
+            "from": sender_email
+        },
+        "action": {
+            "addLabelIds": [blocked_emails_label_id],  # Use the label ID here
+            "removeLabelIds": ["INBOX"]
+        }
+    }
+
+    # ... [the previous part of the block_sender function]
+
+    try:
+        service.users().settings().filters().create(userId='me', body=filter_body).execute()
+        print("try done")
+        return JsonResponse({"message": "Sender blocked successfully. Future emails from this sender will be labeled as 'Blocked Emails'."}, status=200)
+    
+    except Exception as e:
+        error_message = str(e)
+        print(error_message)
+        
+        if "Filter already exists" in error_message:
+            print(str(e))
+            return JsonResponse({"message": "Sender already bocked."}, status=409)  # 409 Conflict
+        
+        return JsonResponse({"error": error_message}, status=500)
+
+
+    
+
+
+
+
+
+
 
    
 
