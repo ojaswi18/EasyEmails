@@ -5,10 +5,24 @@
 <div class="container-lg p-4" style="background-color:#f2f1f1">
   <div class="icons" style="font-size:15px">
     <i class="bi bi-arrow-left mr-3 p-2" onclick="window.history.back()"></i> 
-    <i class="bi bi-trash mr-3 p-2" onclick="deleteEmail('{{ email.id }}')"></i> 
-    <i class="bi bi-calendar-event mr-3 p-2"></i> 
-    <i class="bi bi-envelope mr-3 p-2"></i> 
-    <i class="bi bi-three-dots mr-3 p-2"></i> 
+    <i class="bi bi-trash mr-3 p-2" onclick="deleteEmail('{{ email.id }}')"></i>  
+    <a href="/addevent">
+       <i class="bi bi-calendar-event mr-3 p-2" style="color: black;"></i>
+    </a>   
+    {% comment %} <i class="bi bi-envelope mr-3 p-2"></i>  {% endcomment %}
+    {% comment %} <i class="bi bi-three-dots mr-3 p-2"></i>  {% endcomment %}
+    <span class="dropdown">
+     <button class="more-button" type="button" id="moreOptionsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border: none; background-color: transparent;">
+        <i class="bi bi-three-dots"></i>
+      </button> 
+      <div class="dropdown-menu" aria-labelledby="moreOptionsDropdown">
+        <a class="dropdown-item" onclick="forwardEmail('{{ email.id }}')">Forward</a>
+        <a class="dropdown-item" onclick="replyToEmail('{{ email.id }}')">Reply</a>
+        <a class="dropdown-item" onclick="deleteEmail('{{ email.id }}')">Delete</a>
+        {% comment %} <a class="dropdown-item" href="#">Mark as Unread</a> {% endcomment %}
+        <a class="dropdown-item" onclick="blockSender('{{ email.sender_email }}')">Block</a>
+      </div>
+    </span>
   </div><div class="dropdown-divider"></div>
   <span style=" font-size: 32px;">{{email.subject}}</span><br><br><br>
   <div class="container p-3" style="background-color: #f3f3f3;">
@@ -23,16 +37,16 @@
         <i id="star-icon2-{{ email.id }}" class="bi bi-star-fill"  style="display: {% if email.star %}inline{% else %}none{% endif %}; color: yellow;"></i>
     </button>
     
-       <button class="reply-button mr-2" style="border: none; background-color: transparent;">
+       {% comment %} <button class="reply-button mr-2" style="border: none; background-color: transparent;">
         <i class="bi bi-reply"></i>
-       </button>
+       </button> {% endcomment %}
        <span class="dropdown">
         <button class="more-button" type="button" id="moreOptionsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border: none; background-color: transparent;">
           <i class="bi bi-three-dots"></i>
         </button>
         <div class="dropdown-menu" aria-labelledby="moreOptionsDropdown">
-          <a class="dropdown-item" onclick="replyToEmail('{{ email.id }}')">Reply</a>
           <a class="dropdown-item" onclick="forwardEmail('{{ email.id }}')">Forward</a>
+          <a class="dropdown-item" onclick="replyToEmail('{{ email.id }}')">Reply</a>
           <a class="dropdown-item" onclick="deleteEmail('{{ email.id }}')">Delete</a>
           {% comment %} <a class="dropdown-item" href="#">Mark as Unread</a> {% endcomment %}
           <a class="dropdown-item" onclick="blockSender('{{ email.sender_email }}')">Block</a>
