@@ -2,17 +2,203 @@
 
 {% block title %}home{% endblock title %}
 
-
 {% block body %}
-<div>
-    <h1>Gmail Page</h1>
-    <a href="/sortedemails/Group1"><button type="button" class="btn btn-primary btn-lg">G1</button></a>
-    <a href="/sortedemails/Group2"><button type="button" class="btn btn-primary btn-lg">G2</button></a>
-    <a href="/sortedemails/Group3"><button type="button" class="btn btn-primary btn-lg">G3</button></a>
-    <a href="/sortedemails/Group4"><button type="button" class="btn btn-primary btn-lg">G4</button></a>
-    <a href="/googlecalendar"><button type="button" class="btn btn-primary btn-lg">googlecalendar</button></a>
-    <a href="/compose"><button type="button" class="btn btn-primary btn-lg">compose</button></a>
+<div class="text-center">
+    <div style="height: 14cm; background-color: lightgreen; color: white; font-weight: bold; display: flex; justify-content: center; align-items: center;">
+        <h1 style="margin: 0; font-size: 8em; text-align: center; text-transform: uppercase; font-style: italic;">Easy Emails</h1>
+    </div>
+    <div class="mt-3">
+        <div class="row justify-content-center">
+            <!-- Group 1 -->
+            <div class="col-md-3 m-2">
+                <a href="/sortedemails/Group1">
+                    <button type="button" class="btn btn-light btn-lg btn-block" style="height: 3.5cm; padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">Placement & Internship</button>
+                </a>
+            </div>
+            <!-- Group 2 -->
+            <div class="col-md-3 m-2">
+                <a href="/sortedemails/Group2">
+                    <button type="button" class="btn btn-light btn-lg btn-block" style="height: 3.5cm; padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">College Academics</button>
+                </a>
+            </div>
+            <!-- Group 3 -->
+            <div class="col-md-3 m-2">
+                <a href="/sortedemails/Group3">
+                    <button type="button" class="btn btn-light btn-lg btn-block" style="height: 3.5cm; padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">College Clubs & Activities</button>
+                </a>
+            </div>
+            <!-- Group 4 -->
+            <div class="col-md-3 m-2">
+                <a href="/sortedemails/Group4">
+                    <button type="button" class="btn btn-light btn-lg btn-block" style="height: 3.5cm; padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">View Others Emails</button>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
+
+<div class="container mb-2 mr-3">
+    <div class="row justify-content-end">
+        {% comment %} <div class="col-md-3 mt-3"> {% endcomment %}
+            <a href="/compose">
+                <button type="button" class="btn btn-light btn-lg btn-block" style="height: 2.5cm; padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">Compose</button>
+            </a>
+        {% comment %} </div> {% endcomment %}
+    </div>
+</div>
+
 {% endblock body %}
 
 
+{% comment %} {% block body %}
+<div class="text-center">
+    <div style="height: 14cm; background-color: lightgreen; color: white; font-weight: bold; display: flex; justify-content: center; align-items: center;">
+        <h1 style="margin: 0; font-size: 8em; text-align: center; text-transform: uppercase; font-style: italic;">Easy Emails</h1>
+    </div>
+    <div class="mt-3">
+        <div class="row justify-content-center">
+            <!-- Group 1 -->
+            <div class="col-md-3 m-2">
+                <a href="/sortedemails/Group1">
+                    <button type="button" class="btn btn-light btn-lg btn-block" style="height: 3.5cm; padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">Placement & Internship</button>
+                </a>
+            </div>
+            <!-- Group 2 -->
+            <div class="col-md-3 m-2">
+                <a href="/sortedemails/Group2">
+                    <button type="button" class="btn btn-light btn-lg btn-block" style="height: 3.5cm; padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">College Academics</button>
+                </a>
+            </div>
+            <!-- Group 3 -->
+            <div class="col-md-3 m-2">
+                <a href="/sortedemails/Group3">
+                    <button type="button" class="btn btn-light btn-lg btn-block" style="height: 3.5cm; padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">College Clubs & Activities</button>
+                </a>
+            </div>
+            <!-- Group 4 -->
+            <div class="col-md-3 m-2">
+                <a href="/sortedemails/Group4">
+                    <button type="button" class="btn btn-light btn-lg btn-block" style="height: 3.5cm; padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">View Others Emails</button>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-2 m-2">
+            <a href="/compose">
+                <button type="button" class="btn btn-primary btn-lg btn-block" style="padding: 15px 25px; font-size: 1.5em; border-radius: 10px;">Compose</button>
+            </a>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock body %} {% endcomment %}
+            <!-- Google Calendar -->
+            {% comment %} <div class="col-md-2 m-2">
+                <a href="/googlecalendar">
+                    <button type="button" class="btn btn-success btn-lg btn-block" style="padding: 15px 25px; font-size: 1.5em; border-radius: 10px;">Google Calendar</button>
+                </a>
+            </div> {% endcomment %}
+            {% comment %} <div class="col-md-3 m-2">
+                <a href="/googlecalendar">
+                    <button type="button" class="btn btn-light btn-success btn-block" style="height: 3.5cm; padding: 20px 30px; font-size: 1.8em;">Google Calendar</button>
+                </a>
+            </div> {% endcomment %}
+            <!-- Compose -->
+            
+
+{% comment %} 
+{% block body %} {% endcomment %}
+{% comment %} <div class="text-center">
+    {% comment %} <div>
+    <h1>Easy Emails</h1>
+    </div> {% endcomment %}
+    {% comment %} <div style="height: 14cm; background-color: lightgreen; color: white; font-weight: bold; display: flex; justify-content: center; align-items: center;">
+        <h1 style="margin: 0; font-size: 8em; text-align: center; text-transform: uppercase; font-style: italic;">EasyEmails</h1>
+    </div> {% endcomment %}
+    {% comment %} <div class="row justify-content-center"> {% endcomment %}
+        {% comment %} <div class="mt-3">
+            <div class="row justify-content-center">
+                <!-- Group 1 -->
+                <div class="col-md-3 m-2 btn-group">
+                    <a href="/sortedemails/Group1">
+                        <button type="button" class="height: 2.5cm; btn btn-light btn-lg btn-block" style="padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">Placement & Internship</button>
+                    </a>
+                </div>
+                <!-- Group 2 -->
+                <div class="col-md-3 m-2 btn-group"> {% endcomment %}
+                    {% comment %} <a href="/sortedemails/Group2">
+                        <button type="button" class="height: 2.5cm; btn btn-light btn-lg btn-block" style="padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">Colledge Academics</button>
+                    </a>
+                </div>
+                <!-- Group 3 -->
+                <div class="col-md-3 m-2 btn-group">
+                    <a href="/sortedemails/Group3">
+                        <button type="button" class="height: 2.5cm; btn btn-light btn-lg btn-block" style="padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">Colledge Clubs & Activities</button>
+                    </a>
+                </div>
+                <!-- Group 4 -->
+                <div class="col-md-3 m-2 btn-group">
+                    <a href="/sortedemails/Group4">
+                        <button type="button" class="height: 2.5cm; btn btn-light btn-lg btn-block" style="padding: 20px 30px; font-size: 1.8em; border: 2px solid #000; background-color: #fff; color: #000;">Others Emails</button>
+                    </a>
+                </div>
+            </div>
+            <div class="row">
+                <!-- Google Calendar -->
+                <div class="col-md-2 m-2 btn-group">
+                    <a href="/googlecalendar"> {% endcomment %}
+                        {% comment %} <button type="button" class="btn btn-success btn-lg btn-block">Google Calendar</button>
+                    </a>
+                </div>
+                <!-- Compose -->
+                <div class="col-md-2 m-2 btn-group">
+                    <a href="/compose">
+                        <button type="button" class="btn btn-danger btn-lg btn-block">Compose</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock body %}  {% endcomment %}
+    
+        <!-- Bootstrap JS (optional) for dropdowns, modals, etc. -->
+        {% comment %} <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script> {% endcomment %}
+    {% comment %} <div class="col-md-2 m-2">
+        <a href="/sortedemails/Group1">
+            <button type="button" class="btn btn-primary btn-lg btn-block">Group 1</button>
+        </a>
+    </div>
+    <div class="col-md-2 m-2">
+        <a href="/sortedemails/Group2">
+            <button type="button" class="btn btn-primary btn-lg btn-block">Group 2</button>
+        </a>
+    </div>
+    <div class="col-md-2 m-2">
+        <a href="/sortedemails/Group3">
+            <button type="button" class="btn btn-primary btn-lg btn-block">Group 3</button>
+        </a>
+    </div>
+    <div class="col-md-2 m-2">
+        <a href="/sortedemails/Group4">
+            <button type="button" class="btn btn-primary btn-lg btn-block">Group 4</button>
+        </a>
+    </div>
+    <div class="col-md-2 m-2">
+        <a href="/googlecalendar">
+            <button type="button" class="btn btn-success btn-lg btn-block">Google Calendar</button>
+        </a>
+    </div>
+    <div class="col-md-2 m-2">
+        <a href="/compose">
+            <button type="button" class="btn btn-danger btn-lg btn-block">Compose</button>
+        </a>
+    </div> {% endcomment %}
+    {% comment %} </div> {% endcomment %}
+  
+
+
+ {% comment %} <a href="/sortedemails/Group1"><button type="button" class="btn btn-primary btn-lg">G1</button></a> {% endcomment %}
+    {% comment %} <a href="/sortedemails/Group2"><button type="button" class="btn btn-primary btn-lg">G2</button></a>
+    <a href="/sortedemails/Group3"><button type="button" class="btn btn-primary btn-lg">G3</button></a>
+    <a href="/sortedemails/Group4"><button type="button" class="btn btn-primary btn-lg">G4</button></a> {% endcomment %}
+    {% comment %} <a href="/googlecalendar"><button type="button" class="btn btn-primary btn-lg">googlecalendar</button></a>
+    <a href="/compose"><button type="button" class="btn btn-primary btn-lg">compose</button></a> {% endcomment %}

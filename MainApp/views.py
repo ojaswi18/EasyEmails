@@ -70,7 +70,7 @@ def google_callback(request):
     # Use the obtained credentials to make API calls
     service = build('gmail', 'v1', credentials=credentials)
     # Call the Gmail API to retrieve the user's emails
-    results = service.users().messages().list(userId='me', maxResults=20).execute()
+    results = service.users().messages().list(userId='me', maxResults=200).execute()
     emails = results.get('messages', [])
     first_email_detail = service.users().messages().get(userId='me', id=results['messages'][0]['id'], format='full').execute()
     headers = first_email_detail['payload']['headers']
