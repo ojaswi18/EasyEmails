@@ -3,8 +3,8 @@
 {% block title %}Create Event{% endblock title %}
 
 {% block body %}
-<div class="container">
-  <h1>Create Event</h1>
+<div class="container mt-3" style=" background-color: #f0f0f0; padding: 20px; border-radius: 10px;">
+  {% comment %} <h1>Create Event</h1> {% endcomment %}
   <form method="POST" action="{% url 'create_event' %}">
     {% csrf_token %}
     <div class="form-group">
